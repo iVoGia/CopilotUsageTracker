@@ -108,15 +108,27 @@ cursor --install-extension ~/Downloads/copilot-usage-tracker-1.0.1.vsix --force
 
 Không cần chạy lại `operator:setup` — chỉ thay extension.
 
+### Upgrade lên v1.1.0 (auto token capture)
+
+1. Tải **`copilot-usage-tracker-1.1.0.vsix`** từ [Releases](https://github.com/iVoGia/CopilotUsageTracker/releases/tag/v1.1.0)
+2. Cài đè + **Developer: Reload Window**
+3. Setup → **Start Task** → chat bình thường trong Cursor
+4. Status bar hiện `↑… ↓…` sau lượt chat đầu tiên
+
+**Privacy:** extension đọc Cursor DB local để lấy token/model; chỉ gửi số lên API, không gửi nội dung chat.
+
+**Yêu cầu:** `sqlite3` CLI có trên PATH (macOS/Linux thường có sẵn).
+
 ---
 
-## Tracking theo task
+## Tracking theo task (v1.1.0 auto)
 
 1. **Start Task** → `ABC-123`  
-2. Dùng Copilot Chat  
-3. **Record Chat Turn** — model + độ dài (không dán prompt)  
-4. Dashboard → **Tasks**  
-5. **End Task** khi xong ticket  
+2. Dùng Cursor Chat / Copilot Chat — extension **tự ghi** token mỗi lượt  
+3. Dashboard → **Tasks**  
+4. **End Task** khi xong ticket  
+
+Fallback: **Record Chat Turn** nếu auto capture tắt.
 
 Chi tiết workflow: [pilot-option-c.md](./pilot-option-c.md)
 

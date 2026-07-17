@@ -14,7 +14,7 @@ Releases (VSIX): https://github.com/iVoGia/CopilotUsageTracker/releases
 | Vai trò | Việc làm |
 |---------|----------|
 | **Operator** | Chạy API/dashboard trên máy đó: `operator:setup` / `operator:start` |
-| **Developer (client)** | Cài VSIX → Setup → Start Task → Record Chat Turn |
+| **Developer (client)** | Cài VSIX → Setup → Start Task → chat bình thường (auto token) |
 
 **Pilot 1 người:** bạn kiêm cả hai trên **cùng một máy** (API = `localhost`).
 
@@ -90,22 +90,32 @@ Nếu thấy `Missing tiktoken_bg.wasm` → bạn đang dùng **v1.0.0**; upgrad
 
 Dùng **Command Palette** (`Cmd+Shift+P`), không phải Agent Actions palette của Cursor.
 
-### C. Tracking theo task (workflow hàng ngày)
+### C. Tracking theo task (v1.1.0 — auto capture)
 
-1. **Copilot Tracker: Start Task** → ví dụ `ABC-123` hoặc `Fix payment bug`  
+1. **Copilot Tracker: Start Task** → ví dụ `ABC-123`  
    → Status bar: `GHC: ABC-123`
-2. Dùng **GitHub Copilot Chat** bình thường.
-3. Sau mỗi lượt chat cần ghi: **Copilot Tracker: Record Chat Turn**
-   - Chọn model
-   - Nhập **prompt length** / **response length** (số ký tự ước lượng)
-   - **Không** dán nội dung prompt / code
-4. Dashboard → **Tasks** / Overview: prompts & credits gắn task.
+2. Dùng **Cursor Chat / Agent** hoặc **Copilot Chat** bình thường.
+3. Sau mỗi lượt chat (prompt → AI trả lời), extension **tự ghi** trong ~5–10 giây:
+   - **Input tokens** (context window từ Cursor DB local)
+   - **Output tokens** (ước lượng từ độ dài response)
+   - Status bar: `GHC: ABC-123 · ↑12.4k ↓800`
+4. Dashboard → **Tasks** / Overview: events gắn task.
 5. Đổi ticket: **End Task** → **Start Task** mới.
 
-### Giới hạn MVP (biết trước)
+**Không cần** bấm Record Chat Turn trừ khi auto capture tắt hoặc lỗi.
 
-- Extension **chưa tự hook** Copilot Chat — phải **Record** thủ công (đúng privacy).
-- Auto-capture là phase sau nếu cần.
+Settings (tuỳ chọn): `ghc.autoCapture.enabled`, `ghc.autoCapture.sources` (`cursor` | `copilot` | `both`).
+
+### D. Fallback thủ công
+
+Nếu auto capture không chạy: **Copilot Tracker: Record Chat Turn** (nhập độ dài ký tự).
+
+### Giới hạn (biết trước)
+
+- Cursor auto đọc **SQLite local** (`state.vscdb`) — unofficial, có thể đổi khi Cursor update.
+- Extension **đọc text local** để đo độ dài; **không upload** nội dung prompt/response lên server.
+- Output tokens trên Cursor là **ước lượng** (field `tokenCount` thường = 0).
+- Copilot auto cần extension Copilot Chat + debug export command (VS Code).
 
 ---
 
@@ -127,6 +137,7 @@ Phân phối vẫn Option C: Private repo + file VSIX (Release / share nội b�
 | `npm run operator:start` | Operator — chạy stack |
 | `npm run check:local` | Kiểm tra Postgres/Redis |
 | Install from VSIX + Setup | Client |
-| Start / End Task + Record | Client — tracking |
+| Start / End Task | Client — tracking |
+| Auto capture (v1.1.0+) | Client — tự động sau mỗi chat turn |
 
 Chi tiết cài đặt dài: [install-from-release.md](./install-from-release.md)

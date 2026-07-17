@@ -3,16 +3,22 @@ import { createHash, randomUUID } from 'crypto';
 import { EventQueue } from './event-queue';
 import { ApiClient } from './api-client';
 import { estimateCredits, estimateTokens } from './token-estimate';
+import { AutoCaptureManager, type CapturedTurn } from './auto-capture';
+import type { TokenSource } from './types';
 
 const EXTENSION_VERSION = require('../package.json').version as string;
 
 let statusBar: vscode.StatusBarItem;
 let queue: EventQueue;
 let api: ApiClient;
+let autoCapture: AutoCaptureManager | undefined;
 let currentTaskLabel: string | undefined;
 let loggedIn = false;
 let lastError: string | undefined;
 let displayName: string | undefined;
+let lastTurnInputTokens: number | undefined;
+let lastTurnOutputTokens: number | undefined;
+let autoCaptureHint: string | undefined;
 
 const MODEL_PRESETS: { label: string; model: string; provider: string }[] = [
   { label: 'GPT-4.1 (OpenAI)', model: 'gpt-4.1', provider: 'OpenAI' },
@@ -30,6 +36,22 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   queue = new EventQueue(api);
 
+  autoCapture = new AutoCaptureManager(context, {
+    onTurn: async (turn) => {
+      if (!loggedIn) return;
+      await recordCapturedTurn(turn);
+      await queue.flush().catch(() => undefined);
+      lastTurnInputTokens = turn.inputTokens;
+      lastTurnOutputTokens = turn.outputTokens;
+      updateStatus();
+      console.log(`[ghc] auto-captured turn ${turn.tokenSource} in=${turn.inputTokens} out=${turn.outputTokens}`);
+    },
+    onStatus: (msg) => {
+      autoCaptureHint = msg;
+      updateStatus();
+    },
+  });
+
   context.subscriptions.push(
     statusBar,
     vscode.commands.registerCommand('ghc.setup', () => runSetup(context)),
@@ -45,6 +67,7 @@ export async function activate(context: vscode.ExtensionContext) {
   if (token) {
     api.setToken(token);
     loggedIn = true;
+    autoCapture.start();
   }
 
   updateStatus();
@@ -69,6 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
+  autoCapture?.stop();
   return queue?.flush().catch(() => undefined);
 }
 
@@ -124,9 +148,10 @@ async function runSetup(context: vscode.ExtensionContext) {
     loggedIn = true;
     displayName = name;
     lastError = undefined;
+    autoCapture?.start();
     updateStatus();
     vscode.window.showInformationMessage(
-      `Logged in as ${name}. Next: Start Task, then Record Chat Turn (lengths only).`,
+      `Logged in as ${name}. Auto-capture is on — Start Task, then use Cursor/Copilot Chat normally.`,
     );
   } catch (err) {
     loggedIn = false;
@@ -216,6 +241,7 @@ async function recordChatTurn() {
       provider,
       success: true,
       durationMs: 0,
+      tokenSource: 'manual',
     });
     await queue.flush();
     lastError = undefined;
@@ -250,6 +276,11 @@ function ensureLoggedIn(): boolean {
   return false;
 }
 
+function formatTokenShort(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
 function updateStatus() {
   if (lastError) {
     statusBar.text = '$(warning) GHC: offline';
@@ -263,15 +294,44 @@ function updateStatus() {
     statusBar.command = 'ghc.setup';
     return;
   }
+
+  const tokenSuffix =
+    lastTurnInputTokens != null && lastTurnOutputTokens != null
+      ? ` · ↑${formatTokenShort(lastTurnInputTokens)} ↓${formatTokenShort(lastTurnOutputTokens)}`
+      : '';
+
   if (currentTaskLabel) {
-    statusBar.text = `$(pulse) GHC: ${currentTaskLabel}`;
-    statusBar.tooltip = `Logged in as ${displayName ?? 'user'} · click to change task`;
+    statusBar.text = `$(pulse) GHC: ${currentTaskLabel}${tokenSuffix}`;
+    statusBar.tooltip = [
+      `Logged in as ${displayName ?? 'user'}`,
+      autoCaptureHint,
+      'Auto-capture on · click to change task',
+    ]
+      .filter(Boolean)
+      .join('\n');
     statusBar.command = 'ghc.startTask';
     return;
   }
-  statusBar.text = `$(pulse) GHC: ${displayName ?? 'ready'}`;
-  statusBar.tooltip = 'Start a task to attribute usage';
+  statusBar.text = `$(pulse) GHC: ${displayName ?? 'auto on'}${tokenSuffix}`;
+  statusBar.tooltip = [autoCaptureHint, 'Start a task to attribute usage'].filter(Boolean).join('\n');
   statusBar.command = 'ghc.startTask';
+}
+
+async function recordCapturedTurn(turn: CapturedTurn) {
+  await recordChatMetadata({
+    promptLength: turn.promptLength,
+    responseLength: turn.responseLength,
+    model: turn.model,
+    provider: turn.provider,
+    success: turn.success,
+    durationMs: turn.durationMs ?? 0,
+    errorCode: undefined,
+    tokenSource: turn.tokenSource,
+    idempotencyKey: turn.idempotencyKey,
+    inputTokens: turn.inputTokens,
+    outputTokens: turn.outputTokens,
+    occurredAt: turn.occurredAt,
+  });
 }
 
 async function recordChatMetadata(input: {
@@ -282,14 +342,28 @@ async function recordChatMetadata(input: {
   success: boolean;
   durationMs: number;
   errorCode?: string;
+  tokenSource?: TokenSource;
+  idempotencyKey?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  occurredAt?: string;
 }) {
   const machineId = createHash('sha256')
     .update(vscode.env.machineId)
     .digest('hex')
     .slice(0, 32);
 
-  const inputTokens = estimateTokens(input.provider, input.model, input.promptLength);
-  const outputTokens = estimateTokens(input.provider, input.model, input.responseLength);
+  const useProvidedTokens =
+    (input.tokenSource === 'cursor-local' || input.tokenSource === 'copilot-debug') &&
+    input.inputTokens != null &&
+    input.outputTokens != null;
+
+  const inputTokens = useProvidedTokens
+    ? input.inputTokens!
+    : estimateTokens(input.provider, input.model, input.promptLength);
+  const outputTokens = useProvidedTokens
+    ? input.outputTokens!
+    : estimateTokens(input.provider, input.model, input.responseLength);
   const estimatedCredits = estimateCredits(
     input.provider,
     input.model,
@@ -299,7 +373,7 @@ async function recordChatMetadata(input: {
 
   const folder = vscode.workspace.workspaceFolders?.[0];
   await queue.enqueue({
-    idempotencyKey: randomUUID(),
+    idempotencyKey: input.idempotencyKey ?? randomUUID(),
     kind: 'CHAT',
     provider: input.provider,
     model: input.model,
@@ -308,9 +382,11 @@ async function recordChatMetadata(input: {
     estimatedInputTokens: inputTokens,
     estimatedOutputTokens: outputTokens,
     estimatedCredits,
+    tokenSource: input.tokenSource,
     durationMs: input.durationMs,
     success: input.success,
     errorCode: input.errorCode,
+    occurredAt: input.occurredAt,
     project: folder
       ? {
           workspaceName: folder.name,

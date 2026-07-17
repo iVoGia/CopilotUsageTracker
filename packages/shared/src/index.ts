@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const RoleSchema = z.enum(['DEVELOPER', 'LEADER', 'ADMIN']);
 export const EventKindSchema = z.enum(['CHAT', 'COMPLETION']);
 export const DateRangeSchema = z.enum(['today', 'yesterday', '7d', '30d', 'sprint']);
+export const TokenSourceSchema = z.enum(['manual', 'cursor-local', 'copilot-debug']);
 
 export const UsageEventInputSchema = z
   .object({
@@ -19,6 +20,7 @@ export const UsageEventInputSchema = z
     estimatedInputTokens: z.number().int().nonnegative().optional(),
     estimatedOutputTokens: z.number().int().nonnegative().optional(),
     estimatedCredits: z.number().nonnegative().optional(),
+    tokenSource: TokenSourceSchema.optional(),
     sessionId: z.string().uuid().optional(),
     taskId: z.string().uuid().optional(),
     project: z
@@ -68,6 +70,7 @@ export const DashboardFiltersSchema = z.object({
 });
 
 export type UsageEventInput = z.infer<typeof UsageEventInputSchema>;
+export type TokenSource = z.infer<typeof TokenSourceSchema>;
 export type BatchEventsInput = z.infer<typeof BatchEventsSchema>;
 export type DashboardFilters = z.infer<typeof DashboardFiltersSchema>;
 export type Role = z.infer<typeof RoleSchema>;

@@ -17,6 +17,24 @@ describe('BatchEventsSchema', () => {
     expect(parsed.events).toHaveLength(1);
   });
 
+  it('accepts auto-capture token metadata', () => {
+    const parsed = BatchEventsSchema.parse({
+      events: [
+        {
+          idempotencyKey: 'cursor-local:abc:u1:a1',
+          provider: 'Cursor',
+          model: 'grok-4.5',
+          promptLength: 100,
+          responseLength: 500,
+          estimatedInputTokens: 12000,
+          estimatedOutputTokens: 800,
+          tokenSource: 'cursor-local',
+        },
+      ],
+    });
+    expect(parsed.events[0].tokenSource).toBe('cursor-local');
+  });
+
   it('rejects unknown content fields (strict)', () => {
     expect(() =>
       BatchEventsSchema.parse({

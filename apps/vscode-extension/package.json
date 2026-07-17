@@ -2,7 +2,7 @@
   "name": "copilot-usage-tracker",
   "displayName": "Copilot Usage Tracker",
   "description": "Privacy-first Copilot Chat metadata tracker — never uploads prompt content or source code.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "ghc",
   "license": "MIT",
   "repository": {
@@ -66,6 +66,23 @@
           "type": "string",
           "default": "",
           "description": "Display name for device login (pilot)"
+        },
+        "ghc.autoCapture.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically capture Cursor/Copilot chat turns (metadata + tokens only)"
+        },
+        "ghc.autoCapture.pollIntervalMs": {
+          "type": "number",
+          "default": 3000,
+          "minimum": 1000,
+          "description": "How often to poll for new chat turns (milliseconds)"
+        },
+        "ghc.autoCapture.sources": {
+          "type": "string",
+          "enum": ["cursor", "copilot", "both"],
+          "default": "both",
+          "description": "Which chat sources to auto-capture"
         }
       }
     }

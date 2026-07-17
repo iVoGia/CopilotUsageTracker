@@ -88,27 +88,38 @@ export class EventsService {
       orderBy: { version: 'desc' },
     });
 
-    const inputTokens = defaultTokenEstimator.estimateInput({
-      provider: input.provider,
-      model: input.model,
-      charLength: input.promptLength,
-    });
-    const outputTokens = defaultTokenEstimator.estimateOutput({
-      provider: input.provider,
-      model: input.model,
-      charLength: input.responseLength,
-    });
+    const rateConfig = rate
+      ? {
+          inputCreditsPer1kTokens: rate.inputCreditsPer1kTokens,
+          outputCreditsPer1kTokens: rate.outputCreditsPer1kTokens,
+        }
+      : undefined;
+
+    const useClientTokens =
+      (input.tokenSource === 'cursor-local' || input.tokenSource === 'copilot-debug') &&
+      input.estimatedInputTokens != null &&
+      input.estimatedOutputTokens != null;
+
+    const inputTokens = useClientTokens
+      ? input.estimatedInputTokens!
+      : defaultTokenEstimator.estimateInput({
+          provider: input.provider,
+          model: input.model,
+          charLength: input.promptLength,
+        });
+    const outputTokens = useClientTokens
+      ? input.estimatedOutputTokens!
+      : defaultTokenEstimator.estimateOutput({
+          provider: input.provider,
+          model: input.model,
+          charLength: input.responseLength,
+        });
     const estimatedCredits = defaultTokenEstimator.estimateCredits({
       provider: input.provider,
       model: input.model,
       inputTokens,
       outputTokens,
-      rate: rate
-        ? {
-            inputCreditsPer1kTokens: rate.inputCreditsPer1kTokens,
-            outputCreditsPer1kTokens: rate.outputCreditsPer1kTokens,
-          }
-        : undefined,
+      rate: rateConfig,
     });
 
     const day = new Date(Date.UTC(occurredAt.getUTCFullYear(), occurredAt.getUTCMonth(), occurredAt.getUTCDate()));
