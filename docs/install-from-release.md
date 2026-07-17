@@ -89,6 +89,25 @@ curl -sf http://localhost:3001/api/health
 
 Status bar không còn `GHC: Sign in`. Offline → kiểm tra Operator đang chạy.
 
+### Upgrade từ v1.0.0 → v1.0.1 (bắt buộc nếu đang dùng v1.0.0)
+
+v1.0.0 bị lỗi activation (`Missing tiktoken_bg.wasm`) → mọi lệnh `ghc.*` báo *command not found*.
+
+1. Tải **`copilot-usage-tracker-1.0.1.vsix`** từ [Releases](https://github.com/iVoGia/CopilotUsageTracker/releases/tag/v1.0.1)
+2. Gỡ extension cũ (Extensions → Uninstall **Copilot Usage Tracker**) hoặc cài đè:
+
+```bash
+cursor --install-extension ~/Downloads/copilot-usage-tracker-1.0.1.vsix --force
+```
+
+3. **Developer: Reload Window** (`Cmd+Shift+P`)
+4. Kiểm tra Extension Host log (Output → **Extension Host**):
+   - **Pass:** `Extension activated success: ghc.copilot-usage-tracker`
+   - **Fail (v1.0.0):** `Error: Missing tiktoken_bg.wasm`
+5. `Cmd+Shift+P` → **Copilot Tracker: Setup** — không còn *command not found*
+
+Không cần chạy lại `operator:setup` — chỉ thay extension.
+
 ---
 
 ## Tracking theo task

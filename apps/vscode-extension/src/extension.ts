@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { createHash, randomUUID } from 'crypto';
-import { defaultTokenEstimator } from '@ghc/token-estimator';
 import { EventQueue } from './event-queue';
 import { ApiClient } from './api-client';
+import { estimateCredits, estimateTokens } from './token-estimate';
+
+const EXTENSION_VERSION = require('../package.json').version as string;
 
 let statusBar: vscode.StatusBarItem;
 let queue: EventQueue;
@@ -286,22 +288,14 @@ async function recordChatMetadata(input: {
     .digest('hex')
     .slice(0, 32);
 
-  const inputTokens = defaultTokenEstimator.estimateInput({
-    provider: input.provider,
-    model: input.model,
-    charLength: input.promptLength,
-  });
-  const outputTokens = defaultTokenEstimator.estimateOutput({
-    provider: input.provider,
-    model: input.model,
-    charLength: input.responseLength,
-  });
-  const estimatedCredits = defaultTokenEstimator.estimateCredits({
-    provider: input.provider,
-    model: input.model,
+  const inputTokens = estimateTokens(input.provider, input.model, input.promptLength);
+  const outputTokens = estimateTokens(input.provider, input.model, input.responseLength);
+  const estimatedCredits = estimateCredits(
+    input.provider,
+    input.model,
     inputTokens,
     outputTokens,
-  });
+  );
 
   const folder = vscode.workspace.workspaceFolders?.[0];
   await queue.enqueue({
@@ -326,7 +320,7 @@ async function recordChatMetadata(input: {
     environment: {
       machineId,
       vscodeVersion: vscode.version,
-      copilotExtensionVersion: '1.0.0',
+      copilotExtensionVersion: EXTENSION_VERSION,
     },
   });
 }

@@ -2,7 +2,7 @@
   "name": "copilot-usage-tracker",
   "displayName": "Copilot Usage Tracker",
   "description": "Privacy-first Copilot Chat metadata tracker — never uploads prompt content or source code.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "ghc",
   "license": "MIT",
   "repository": {
@@ -14,7 +14,12 @@
   },
   "categories": ["Other"],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:ghc.setup",
+    "onCommand:ghc.recordChatTurn",
+    "onCommand:ghc.startTask",
+    "onCommand:ghc.endTask",
+    "onCommand:ghc.flush"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -71,9 +76,6 @@
     "vscode:prepublish": "npm run build",
     "vscode:package": "npm run build && vsce package --no-dependencies --allow-missing-repository",
     "test": "echo 'extension tests via vscode test runner'"
-  },
-  "dependencies": {
-    "@ghc/token-estimator": "*"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",

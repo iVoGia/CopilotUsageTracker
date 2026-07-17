@@ -80,6 +80,16 @@ Troubleshoot: [local-without-docker.md](./local-without-docker.md)
    - GitHub ID + Display name của bạn
 4. Status bar: không còn `GHC: Sign in` (có thể hiện tên / `ready`)
 
+**Verify activation (v1.0.1+):** Output → **Extension Host** phải có:
+
+```
+Extension activated success: ghc.copilot-usage-tracker
+```
+
+Nếu thấy `Missing tiktoken_bg.wasm` → bạn đang dùng **v1.0.0**; upgrade theo [install-from-release.md](./install-from-release.md#upgrade-từ-v100--v101-bắt-buộc-nếu-đang-dùng-v100).
+
+Dùng **Command Palette** (`Cmd+Shift+P`), không phải Agent Actions palette của Cursor.
+
 ### C. Tracking theo task (workflow hàng ngày)
 
 1. **Copilot Tracker: Start Task** → ví dụ `ABC-123` hoặc `Fix payment bug`  
