@@ -1,0 +1,85 @@
+{
+  "name": "copilot-usage-tracker",
+  "displayName": "Copilot Usage Tracker",
+  "description": "Privacy-first Copilot Chat metadata tracker — never uploads prompt content or source code.",
+  "version": "1.0.0",
+  "publisher": "ghc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iVoGia/CopilotUsageTracker.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ghc.setup",
+        "title": "Copilot Tracker: Setup"
+      },
+      {
+        "command": "ghc.login",
+        "title": "Copilot Tracker: Login"
+      },
+      {
+        "command": "ghc.startTask",
+        "title": "Copilot Tracker: Start Task"
+      },
+      {
+        "command": "ghc.endTask",
+        "title": "Copilot Tracker: End Task"
+      },
+      {
+        "command": "ghc.flush",
+        "title": "Copilot Tracker: Flush Events"
+      },
+      {
+        "command": "ghc.recordChatTurn",
+        "title": "Copilot Tracker: Record Chat Turn (metadata only)"
+      }
+    ],
+    "configuration": {
+      "title": "Copilot Usage Tracker",
+      "properties": {
+        "ghc.apiBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:3001/api",
+          "description": "API base URL (no trailing slash required)"
+        },
+        "ghc.githubId": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub user id for device login (pilot)"
+        },
+        "ghc.displayName": {
+          "type": "string",
+          "default": "",
+          "description": "Display name for device login (pilot)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "vscode:prepublish": "npm run build",
+    "vscode:package": "npm run build && vsce package --no-dependencies --allow-missing-repository",
+    "test": "echo 'extension tests via vscode test runner'"
+  },
+  "dependencies": {
+    "@ghc/token-estimator": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.2",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  }
+}

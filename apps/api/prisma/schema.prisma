@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DEVELOPER
+  LEADER
+  ADMIN
+}
+
+enum EventKind {
+  CHAT
+  COMPLETION
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+}
+
+model Developer {
+  id          String   @id @default(uuid()) @db.Uuid
+  githubId    String   @unique @map("github_id")
+  displayName String   @map("display_name")
+  email       String?
+  role        Role     @default(DEVELOPER)
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  sessions       Session[]
+  events         Event[]
+  tasks          Task[]
+  refreshTokens  RefreshToken[]
+  dailyStats     DailyStatistic[]
+  monthlyStats   MonthlyStatistic[]
+
+  @@map("developers")
+}
+
+model Project {
+  id            String   @id @default(uuid()) @db.Uuid
+  workspaceName String   @map("workspace_name")
+  gitBranch     String?  @map("git_branch")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  sessions     Session[]
+  events       Event[]
+  tasks        Task[]
+  dailyStats   DailyStatistic[]
+  monthlyStats MonthlyStatistic[]
+
+  @@unique([workspaceName, gitBranch])
+  @@map("projects")
+}
+
+model Session {
+  id             String        @id @default(uuid()) @db.Uuid
+  developerId    String        @map("developer_id") @db.Uuid
+  projectId      String?       @map("project_id") @db.Uuid
+  status         SessionStatus @default(OPEN)
+  startedAt      DateTime      @default(now()) @map("started_at")
+  endedAt        DateTime?     @map("ended_at")
+  lastActivityAt DateTime      @default(now()) @map("last_activity_at")
+  promptCount    Int           @default(0) @map("prompt_count")
+  totalPromptLength Int        @default(0) @map("total_prompt_length")
+  totalResponseLength Int      @default(0) @map("total_response_length")
+  creditsUsed    Float         @default(0) @map("credits_used")
+
+  developer Developer @relation(fields: [developerId], references: [id])
+  project   Project?  @relation(fields: [projectId], references: [id])
+  events    Event[]
+
+  @@index([developerId, status, lastActivityAt])
+  @@index([lastActivityAt])
+  @@map("sessions")
+}
+
+model Task {
+  id          String    @id @default(uuid()) @db.Uuid
+  developerId String    @map("developer_id") @db.Uuid
+  projectId   String?   @map("project_id") @db.Uuid
+  name        String
+  jiraId      String?   @map("jira_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  active      Boolean   @default(true)
+
+  developer Developer @relation(fields: [developerId], references: [id])
+  project   Project?  @relation(fields: [projectId], references: [id])
+  events    Event[]
+
+  @@index([developerId, active])
+  @@index([jiraId])
+  @@map("tasks")
+}
+
+model Event {
+  id                 String    @id @default(uuid()) @db.Uuid
+  idempotencyKey     String    @unique @map("idempotency_key")
+  kind               EventKind @default(CHAT)
+  developerId        String    @map("developer_id") @db.Uuid
+  sessionId          String    @map("session_id") @db.Uuid
+  projectId          String?   @map("project_id") @db.Uuid
+  taskId             String?   @map("task_id") @db.Uuid
+  creditEstimationId String?   @map("credit_estimation_id") @db.Uuid
+  provider           String
+  model              String
+  promptLength       Int       @map("prompt_length")
+  responseLength     Int       @default(0) @map("response_length")
+  inputTokens        Int       @map("input_tokens")
+  outputTokens       Int       @map("output_tokens")
+  estimatedCredits   Float     @map("estimated_credits")
+  durationMs         Int?      @map("duration_ms")
+  success            Boolean   @default(true)
+  errorCode          String?   @map("error_code")
+  machineId          String?   @map("machine_id")
+  vscodeVersion      String?   @map("vscode_version")
+  copilotExtensionVersion String? @map("copilot_extension_version")
+  occurredAt         DateTime  @map("occurred_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  developer        Developer         @relation(fields: [developerId], references: [id])
+  session          Session           @relation(fields: [sessionId], references: [id])
+  project          Project?          @relation(fields: [projectId], references: [id])
+  task             Task?             @relation(fields: [taskId], references: [id])
+  creditEstimation CreditEstimation? @relation(fields: [creditEstimationId], references: [id])
+
+  @@index([occurredAt])
+  @@index([developerId, occurredAt])
+  @@index([sessionId])
+  @@index([taskId])
+  @@index([model, occurredAt])
+  @@index([projectId, occurredAt])
+  @@map("events")
+}
+
+model DailyStatistic {
+  id               String   @id @default(uuid()) @db.Uuid
+  day              DateTime @db.Date
+  developerId      String   @map("developer_id") @db.Uuid
+  projectId        String   @map("project_id") @db.Uuid
+  model            String
+  promptCount      Int      @default(0) @map("prompt_count")
+  totalPromptLength Int     @default(0) @map("total_prompt_length")
+  totalResponseLength Int   @default(0) @map("total_response_length")
+  inputTokens      Int      @default(0) @map("input_tokens")
+  outputTokens     Int      @default(0) @map("output_tokens")
+  credits          Float    @default(0)
+  successCount     Int      @default(0) @map("success_count")
+  errorCount       Int      @default(0) @map("error_count")
+
+  developer Developer @relation(fields: [developerId], references: [id])
+  project   Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([day, developerId, projectId, model])
+  @@index([day])
+  @@index([developerId, day])
+  @@map("daily_statistics")
+}
+
+model MonthlyStatistic {
+  id               String  @id @default(uuid()) @db.Uuid
+  yearMonth        String  @map("year_month")
+  developerId      String  @map("developer_id") @db.Uuid
+  projectId        String  @map("project_id") @db.Uuid
+  model            String
+  promptCount      Int     @default(0) @map("prompt_count")
+  totalPromptLength Int    @default(0) @map("total_prompt_length")
+  totalResponseLength Int  @default(0) @map("total_response_length")
+  inputTokens      Int     @default(0) @map("input_tokens")
+  outputTokens     Int     @default(0) @map("output_tokens")
+  credits          Float   @default(0)
+  successCount     Int     @default(0) @map("success_count")
+  errorCount       Int     @default(0) @map("error_count")
+
+  developer Developer @relation(fields: [developerId], references: [id])
+  project   Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([yearMonth, developerId, projectId, model])
+  @@index([yearMonth])
+  @@index([developerId, yearMonth])
+  @@map("monthly_statistics")
+}
+
+model CreditEstimation {
+  id                     String   @id @default(uuid()) @db.Uuid
+  provider               String
+  model                  String
+  version                Int      @default(1)
+  inputCreditsPer1kTokens  Float  @map("input_credits_per_1k")
+  outputCreditsPer1kTokens Float  @map("output_credits_per_1k")
+  active                 Boolean  @default(true)
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  events Event[]
+
+  @@unique([provider, model, version])
+  @@index([provider, model, active])
+  @@map("credit_estimation")
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid()) @db.Uuid
+  developerId String   @map("developer_id") @db.Uuid
+  tokenHash   String   @unique @map("token_hash")
+  deviceLabel String?  @map("device_label")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  developer Developer @relation(fields: [developerId], references: [id])
+
+  @@index([developerId])
+  @@map("refresh_tokens")
+}

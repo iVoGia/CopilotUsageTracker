@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build:packages
+
+      - name: Package VS Code extension (VSIX)
+        run: npm run extension:package
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            apps/vscode-extension/*.vsix
+          body: |
+            ## Copilot Usage Tracker ${{ github.ref_name }}
+
+            Privacy-first Copilot Chat metadata tracker.
+
+            ### Quick start (company Mac, no Docker)
+
+            See the [README](https://github.com/iVoGia/CopilotUsageTracker#quick-start-on-company-mac-no-docker) and [install-from-release](https://github.com/iVoGia/CopilotUsageTracker/blob/main/docs/install-from-release.md).
+
+            1. Clone this repo → `npm run setup:local` → `npm run dev:local`
+            2. Download **copilot-usage-tracker-*.vsix** from this release
+            3. Cursor/VS Code → Install from VSIX → **Copilot Tracker: Setup**
+
+            ### Assets
+
+            - `copilot-usage-tracker-*.vsix` — Cursor / VS Code extension
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

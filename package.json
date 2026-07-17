@@ -1,0 +1,33 @@
+{
+  "name": "ghc-token",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Copilot Usage Tracker — privacy-first Copilot Chat metadata analytics",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ghc/domain -w @ghc/shared -w @ghc/token-estimator -w @ghc/api -w @ghc/dashboard",
+    "build:packages": "npm run build -w @ghc/domain -w @ghc/shared -w @ghc/token-estimator",
+    "setup:local": "bash scripts/setup-local-macos.sh",
+    "check:local": "bash scripts/check-local-deps.sh",
+    "dev:local": "bash scripts/dev-local.sh",
+    "dev:api": "npm run start:dev -w @ghc/api",
+    "dev:worker": "npm run start:dev:worker -w @ghc/api",
+    "dev:dashboard": "npm run dev -w @ghc/dashboard",
+    "extension:package": "npm run vscode:package -w copilot-usage-tracker",
+    "release:tag": "echo 'Create an annotated tag, e.g.: git tag -a v1.0.0 -m v1.0.0 && git push origin v1.0.0'",
+    "test": "npm run test -w @ghc/domain -w @ghc/token-estimator -w @ghc/api -w @ghc/shared",
+    "test:unit": "npm run test:unit -w @ghc/domain -w @ghc/token-estimator -w @ghc/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "prisma:generate": "npm run prisma:generate -w @ghc/api",
+    "prisma:migrate": "npm run prisma:migrate -w @ghc/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-a: #ecfeff;
+  --bg-b: #f8fafc;
+  --bg-c: #e2e8f0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--bg-a), transparent 60%),
+    linear-gradient(180deg, var(--bg-b), var(--bg-c));
+  background-attachment: fixed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
