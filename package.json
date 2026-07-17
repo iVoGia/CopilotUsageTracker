@@ -13,6 +13,8 @@
     "setup:local": "bash scripts/setup-local-macos.sh",
     "check:local": "bash scripts/check-local-deps.sh",
     "dev:local": "bash scripts/dev-local.sh",
+    "operator:setup": "npm run setup:local",
+    "operator:start": "npm run dev:local",
     "dev:api": "npm run start:dev -w @ghc/api",
     "dev:worker": "npm run start:dev:worker -w @ghc/api",
     "dev:dashboard": "npm run dev -w @ghc/dashboard",

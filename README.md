@@ -6,6 +6,28 @@ Privacy-first analytics for **GitHub Copilot Chat** usage on a development team 
 
 Repository: [https://github.com/iVoGia/CopilotUsageTracker](https://github.com/iVoGia/CopilotUsageTracker)
 
+> **Repo is Private.** Collaborators (invited accounts) can clone and download Releases. Public visitors see 404.
+
+---
+
+## Option C / Pilot (VSIX + local API)
+
+Internal-plugin model: keep source private, install the **VSIX**, run API on the same Mac for pilot (`localhost`). Test on a personal machine, then repeat on a company machine.
+
+**Full Vietnamese checklist:** [docs/pilot-option-c.md](docs/pilot-option-c.md)
+
+```bash
+# Operator (once + daily) — same machine as the editor for pilot
+npm run operator:setup
+npm run operator:start
+
+# Client: Install VSIX from Releases → Copilot Tracker: Setup
+# API URL: http://localhost:3001/api
+# Then: Start Task → use Copilot → Record Chat Turn
+```
+
+Later (shared API): run the stack once on an internal host; everyone only installs the VSIX and points Setup at that URL.
+
 ---
 
 ## Quick start on company Mac (no Docker)
@@ -18,10 +40,10 @@ git clone https://github.com/iVoGia/CopilotUsageTracker.git
 cd CopilotUsageTracker
 
 # 2. One-time: Postgres + Redis + migrate + seed
-npm run setup:local
+npm run operator:setup   # or: npm run setup:local
 
 # 3. Start API + worker + dashboard
-npm run dev:local
+npm run operator:start   # or: npm run dev:local
 ```
 
 | Service | URL |
@@ -32,7 +54,7 @@ npm run dev:local
 
 Open the dashboard → click **Dev login**.
 
-Troubleshoot: [docs/local-without-docker.md](docs/local-without-docker.md) · Vietnamese checklist: [docs/install-from-release.md](docs/install-from-release.md)
+Troubleshoot: [docs/local-without-docker.md](docs/local-without-docker.md) · Pilot Option C: [docs/pilot-option-c.md](docs/pilot-option-c.md) · Install: [docs/install-from-release.md](docs/install-from-release.md)
 
 ---
 
@@ -104,11 +126,13 @@ curl -X POST http://localhost:3001/api/events \
 
 ## Cài nhanh (tiếng Việt)
 
-1. `git clone https://github.com/iVoGia/CopilotUsageTracker.git && cd CopilotUsageTracker`
-2. `npm run setup:local` rồi `npm run dev:local`
-3. Mở http://localhost:3000 → **Dev login**
-4. Tải VSIX từ [Releases](https://github.com/iVoGia/CopilotUsageTracker/releases) → cài **Install from VSIX**
-5. **Copilot Tracker: Setup** → Start Task → Record Chat Turn
+Xem **[docs/pilot-option-c.md](docs/pilot-option-c.md)** (Option C — VSIX + API local).
+
+1. Invite Collaborator (giữ Private) nếu dùng máy công ty  
+2. `npm run operator:setup` rồi `npm run operator:start`  
+3. Mở http://localhost:3000 → **Dev login**  
+4. Tải VSIX từ [Releases](https://github.com/iVoGia/CopilotUsageTracker/releases) → Install from VSIX  
+5. **Setup** → Start Task → Record Chat Turn  
 
 Chi tiết: [docs/install-from-release.md](docs/install-from-release.md)
 

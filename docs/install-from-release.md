@@ -1,55 +1,62 @@
 # Cài từ GitHub Release (máy công ty, không Docker)
 
-Hướng dẫn từng bước để chạy **Copilot Usage Tracker** trên macOS khi máy **cấm Docker**.
+Repo **Private** — login GitHub account **có quyền** (owner hoặc Collaborator).  
+Hướng dẫn pilot Option C (VSIX + API local): **[pilot-option-c.md](./pilot-option-c.md)**.
 
 Repo: https://github.com/iVoGia/CopilotUsageTracker  
 Releases: https://github.com/iVoGia/CopilotUsageTracker/releases
 
 ---
 
-## Chuẩn bị
+## Hai vai trò
 
-- [ ] Node.js **≥ 20** (`node -v`)
-- [ ] [Homebrew](https://brew.sh) (để cài Postgres + Redis)
-- [ ] Cursor hoặc VS Code
-- [ ] Cổng trống: `5432`, `6379`, `3000`, `3001`
+| Vai trò | Cần gì |
+|---------|--------|
+| **Operator** | Clone/zip source + Postgres/Redis + chạy API trên máy này |
+| **Client (chỉ VSIX)** | Khi đã có API chạy sẵn (cùng máy hoặc URL nội bộ) — chỉ cài `.vsix` |
+
+**Pilot 1 người trên 1 máy:** làm cả Operator rồi Client (API = `localhost`).
 
 ---
 
-## Bước 1 — Clone source
+## Chuẩn bị
+
+- [ ] Node.js **≥ 20** (`node -v`)
+- [ ] [Homebrew](https://brew.sh) (Operator)
+- [ ] Cursor hoặc VS Code
+- [ ] Cổng trống: `5432`, `6379`, `3000`, `3001`
+- [ ] GitHub Collaborator nếu không dùng account owner
+
+---
+
+## Phần Operator — chạy API
+
+### Bước 1 — Lấy source
 
 ```bash
 git clone https://github.com/iVoGia/CopilotUsageTracker.git
 cd CopilotUsageTracker
 ```
 
-Nếu không clone được: vào **Releases** → tải **Source code (zip)** → giải nén → `cd` vào thư mục.
+Hoặc: **Releases** → Source code (zip) → giải nén.
 
----
-
-## Bước 2 — Setup một lần
+### Bước 2 — Setup một lần
 
 ```bash
-npm run setup:local
+npm run operator:setup
+# tương đương: npm run setup:local
 ```
 
-Script sẽ:
+Cài PostgreSQL 16 + Redis, tạo DB `ghc`, migrate + seed.
 
-- Cài PostgreSQL 16 + Redis (Homebrew)
-- Tạo database `ghc`
-- `npm install`, migrate Prisma, seed credit rates
+Lỗi Postgres/Redis → [local-without-docker.md](./local-without-docker.md).
 
-Nếu lỗi Postgres/Redis → xem [local-without-docker.md](./local-without-docker.md).
-
----
-
-## Bước 3 — Chạy stack mỗi ngày
+### Bước 3 — Chạy mỗi ngày
 
 ```bash
-npm run dev:local
+npm run operator:start
+# tương đương: npm run dev:local
 ```
-
-Đợi log báo API và dashboard sẵn sàng, rồi mở:
 
 | Mục | URL |
 |-----|-----|
@@ -57,9 +64,7 @@ npm run dev:local
 | OpenAPI | http://localhost:3001/docs |
 | Health | http://localhost:3001/api/health |
 
-Trên dashboard bấm **Dev login**.
-
-Kiểm tra nhanh:
+Dashboard → **Dev login**.
 
 ```bash
 curl -sf http://localhost:3001/api/health
@@ -67,37 +72,34 @@ curl -sf http://localhost:3001/api/health
 
 ---
 
-## Bước 4 — Tải và cài extension (VSIX)
+## Phần Client — cài extension (VSIX)
 
-1. Mở https://github.com/iVoGia/CopilotUsageTracker/releases
-2. Chọn release mới nhất (ví dụ `v1.0.0`)
-3. Tải file **`copilot-usage-tracker-1.0.0.vsix`** (Assets)
-4. Trong **Cursor** / **VS Code**:
-   - Mở view **Extensions**
-   - Menu `…` (góc trên) → **Install from VSIX…**
-   - Chọn file `.vsix` vừa tải
+### Bước 4 — Tải VSIX
 
----
+1. https://github.com/iVoGia/CopilotUsageTracker/releases  
+2. Tải **`copilot-usage-tracker-*.vsix`**  
+3. Cursor / VS Code → Extensions → `…` → **Install from VSIX…**
 
-## Bước 5 — Setup extension
+### Bước 5 — Setup
 
-1. Command Palette (`Cmd+Shift+P`) → **Copilot Tracker: Setup**
-2. API URL: `http://localhost:3001/api` (Enter)
-3. Nhập GitHub ID + Display name (pilot)
-4. Status bar hiện `GHC: …` (đã login) thay vì `GHC: Sign in`
+1. `Cmd+Shift+P` → **Copilot Tracker: Setup**  
+2. API URL pilot: `http://localhost:3001/api`  
+   (sau này: URL API nội bộ công ty)  
+3. GitHub ID + Display name  
 
-Nếu báo offline: chắc chắn `npm run dev:local` đang chạy và health OK.
+Status bar không còn `GHC: Sign in`. Offline → kiểm tra Operator đang chạy.
 
 ---
 
-## Bước 6 — Dùng thử end-to-end
+## Tracking theo task
 
-1. **Copilot Tracker: Start Task** → ví dụ `ABC-123`
-2. **Copilot Tracker: Record Chat Turn**
-   - Chọn model (vd GPT-4.1)
-   - Prompt length: `120` (chỉ số — **không** dán nội dung prompt)
-   - Response length: `400`
-3. Mở lại dashboard Overview → thấy prompts / credits tăng
+1. **Start Task** → `ABC-123`  
+2. Dùng Copilot Chat  
+3. **Record Chat Turn** — model + độ dài (không dán prompt)  
+4. Dashboard → **Tasks**  
+5. **End Task** khi xong ticket  
+
+Chi tiết workflow: [pilot-option-c.md](./pilot-option-c.md)
 
 ---
 
@@ -105,10 +107,10 @@ Nếu báo offline: chắc chắn `npm run dev:local` đang chạy và health OK
 
 | Lệnh | Mục đích |
 |------|----------|
-| `npm run setup:local` | Cài lần đầu |
+| `npm run operator:setup` | Operator — cài lần đầu |
+| `npm run operator:start` | Operator — chạy stack |
 | `npm run check:local` | Kiểm tra Postgres/Redis |
-| `npm run dev:local` | Chạy API + worker + dashboard |
-| Command: **Setup** | Đăng nhập extension |
+| Command: **Setup** | Client — đăng nhập extension |
 | Command: **Start / End Task** | Gắn task |
 | Command: **Record Chat Turn** | Ghi metadata |
 

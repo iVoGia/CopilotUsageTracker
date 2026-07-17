@@ -3,19 +3,27 @@
 Privacy-first extension: logs **metadata only** (lengths, model, task).  
 **Never** uploads prompt text or source code.
 
+Pilot guide (Option C): [docs/pilot-option-c.md](../../docs/pilot-option-c.md) in the monorepo.
+
 ## Install
 
-From the monorepo root (API should be running):
+1. Download `copilot-usage-tracker-*.vsix` from [GitHub Releases](https://github.com/iVoGia/CopilotUsageTracker/releases) (Private repo — need Collaborator access), **or** build:
 
 ```bash
 npm run extension:package
 ```
 
-In Cursor or VS Code:
-
-1. Extensions → `…` → **Install from VSIX…**
-2. Choose `copilot-usage-tracker-1.0.0.vsix` in this folder
+2. Cursor / VS Code → Extensions → `…` → **Install from VSIX…**
 3. Command Palette → **Copilot Tracker: Setup**
+
+### API URL
+
+| Environment | `ghc.apiBaseUrl` |
+|-------------|------------------|
+| **Pilot (same Mac)** | `http://localhost:3001/api` |
+| **Internal / shared API** | e.g. `https://tracker.congty.internal/api` |
+
+Operator must be running the stack (`npm run operator:start`) before Setup / Record works on localhost.
 
 ## Commands
 
@@ -37,7 +45,7 @@ In Cursor or VS Code:
 
 ## Settings
 
-- `ghc.apiBaseUrl` — default `http://localhost:3001/api`
+- `ghc.apiBaseUrl` — default `http://localhost:3001/api` (pilot); change for shared internal API
 - `ghc.githubId` / `ghc.displayName` — pilot identity
 
 ## Privacy

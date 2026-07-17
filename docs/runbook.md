@@ -2,7 +2,7 @@
 
 ## Install from GitHub Release
 
-See **[install-from-release.md](./install-from-release.md)** (Vietnamese checklist) and the root README Quick Start.
+See **[install-from-release.md](./install-from-release.md)** and **[pilot-option-c.md](./pilot-option-c.md)** (Option C — VSIX + local API).
 
 ## Local without Docker
 
