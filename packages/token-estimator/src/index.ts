@@ -7,6 +7,15 @@ export * from './types';
 export { GptTokenEstimator } from './gpt-estimator';
 export { ClaudeTokenEstimator } from './claude-estimator';
 export { GeminiTokenEstimator } from './gemini-estimator';
+export {
+  AI_CREDIT_USD,
+  estimateCopilotAiCredits,
+  findCopilotRate,
+  isGitHubCopilotEvent,
+  normalizeModelKey,
+  type CopilotUsdRate,
+  type EstimateCopilotAiCreditsParams,
+} from './copilot-credits';
 
 const gpt = new GptTokenEstimator();
 const claude = new ClaudeTokenEstimator();
@@ -35,6 +44,7 @@ export class CompositeTokenEstimator implements TokenEstimator {
     return pick(params.provider, params.model).estimateOutput(params);
   }
 
+  /** @deprecated Prefer estimateCopilotAiCredits for GitHub Copilot AI Credits. */
   estimateCredits(params: EstimateCreditsParams & { rate?: CreditRate }): number {
     return pick(params.provider, params.model).estimateCredits(params);
   }

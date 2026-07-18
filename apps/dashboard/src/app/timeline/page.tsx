@@ -41,7 +41,7 @@ export default function TimelinePage() {
           <li key={d.day} className="flex justify-between rounded bg-white/80 px-3 py-2">
             <span>{d.day}</span>
             <span>
-              {d.prompts} prompts · {d.credits.toFixed(2)} credits
+              {d.prompts} prompts · {d.credits.toFixed(2)} Copilot AI Credits
             </span>
           </li>
         ))}

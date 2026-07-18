@@ -189,14 +189,19 @@ model MonthlyStatistic {
 }
 
 model CreditEstimation {
-  id                     String   @id @default(uuid()) @db.Uuid
-  provider               String
-  model                  String
-  version                Int      @default(1)
-  inputCreditsPer1kTokens  Float  @map("input_credits_per_1k")
-  outputCreditsPer1kTokens Float  @map("output_credits_per_1k")
-  active                 Boolean  @default(true)
-  createdAt              DateTime @default(now()) @map("created_at")
+  id                      String   @id @default(uuid()) @db.Uuid
+  provider                String
+  model                   String
+  version                 Int      @default(1)
+  /// USD per 1M input tokens (GitHub Copilot pricing)
+  usdPer1MInput           Float    @map("usd_per_1m_input")
+  usdPer1MCachedInput     Float    @default(0) @map("usd_per_1m_cached_input")
+  usdPer1MCacheWrite      Float    @default(0) @map("usd_per_1m_cache_write")
+  usdPer1MOutput          Float    @map("usd_per_1m_output")
+  /// When set, input above this uses long-context tier rates (same model row with higher prices)
+  longContextThreshold    Int?     @map("long_context_threshold")
+  active                  Boolean  @default(true)
+  createdAt               DateTime @default(now()) @map("created_at")
 
   events Event[]
 

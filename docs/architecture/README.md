@@ -59,7 +59,7 @@ flowchart LR
 | Tenancy | Single organization |
 | Auth | GitHub OAuth (dashboard); device JWT for extension |
 | Capture | Copilot Chat only; `kind` reserved for future completions |
-| Credits | Configurable rates in `credit_estimation` |
+| Credits | GitHub Copilot AI Credits only (USD/1M rates → credit = $0.01); Cursor = tokens only |
 | Jira | Optional free-text / key on tasks; no Jira API |
 | Aggregation | Sync rollup upsert on ingest |
 | Realtime | NestJS WS + Redis pub/sub |

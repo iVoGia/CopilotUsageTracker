@@ -35,7 +35,7 @@ export default function SessionsPage() {
             <th className="p-3">Developer</th>
             <th className="p-3">Status</th>
             <th className="p-3">Prompts</th>
-            <th className="p-3">Credits</th>
+            <th className="p-3">Copilot AI Credits</th>
             <th className="p-3">Started</th>
           </tr>
         </thead>

@@ -33,7 +33,7 @@ export default function TasksPage() {
             <th className="p-3">Jira</th>
             <th className="p-3">Developer</th>
             <th className="p-3">Prompts</th>
-            <th className="p-3">Credits</th>
+            <th className="p-3">Copilot AI Credits</th>
             <th className="p-3">Active</th>
           </tr>
         </thead>

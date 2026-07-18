@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { createHash, randomUUID } from 'crypto';
 import { EventQueue } from './event-queue';
 import { ApiClient } from './api-client';
-import { estimateCredits, estimateTokens } from './token-estimate';
+import { estimateTokens } from './token-estimate';
 import { AutoCaptureManager, type CapturedTurn } from './auto-capture';
 import type { TokenSource } from './types';
 
@@ -364,12 +364,13 @@ async function recordChatMetadata(input: {
   const outputTokens = useProvidedTokens
     ? input.outputTokens!
     : estimateTokens(input.provider, input.model, input.responseLength);
-  const estimatedCredits = estimateCredits(
-    input.provider,
-    input.model,
-    inputTokens,
-    outputTokens,
-  );
+
+  // Credits are computed on the API for GitHub Copilot only (official AI Credits formula).
+  // Cursor / non-Copilot events must not send heuristic credits.
+  const estimatedCredits =
+    input.tokenSource === 'copilot-debug' || /copilot|github/i.test(input.provider)
+      ? undefined
+      : 0;
 
   const folder = vscode.workspace.workspaceFolders?.[0];
   await queue.enqueue({

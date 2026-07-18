@@ -1,31 +1,47 @@
-# ADR-002: Local + server token estimation
+# ADR-002: Token estimation + GitHub Copilot AI Credits
 
 ## Status
 
-Accepted
+Accepted (updated 2026-07-18)
 
 ## Context
 
-Token and credit estimates must be consistent, modular across providers (GPT, Claude, Gemini), and resistant to trivial client spoofing of costs.
+Teams need two distinct signals:
+
+1. **Tokens consumed per prompt** — accurate usage cost for Cursor and Copilot chat turns.
+2. **GitHub Copilot AI Credits** — because Copilot plans limit by AI credits (usage-based billing).
+
+The old heuristic `(tokens/1000) × 1/3` did **not** match GitHub Copilot billing.
 
 ## Decision
 
-Implement a shared `TokenEstimator` interface in `packages/token-estimator`:
+### Tokens (primary)
 
-- `estimateInput({ provider, model, charLength })`
-- `estimateOutput({ provider, model, charLength })`
-- `estimateCredits({ provider, model, inputTokens, outputTokens })`
+- Store `inputTokens` / `outputTokens` on every event.
+- Auto-capture sources may supply authoritative counts (`tokenSource: cursor-local | copilot-debug`).
+- API re-estimates from character length only for manual events without client tokens.
 
-The extension estimates locally for UX and offline queueing. The API re-runs estimation on received character lengths and stores server values as authoritative.
+### Credits (GitHub Copilot only)
 
-Adapters:
+Official formula ([Models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing)):
 
-- GPT: `@dqbd/tiktoken` (or equivalent open-source tokenizer)
-- Claude / Gemini: documented character-based approximations behind the same interface
+```text
+costUSD =
+  (inputTokens / 1e6) × usdPer1MInput
++ (cachedInputTokens / 1e6) × usdPer1MCachedInput
++ (cacheWriteTokens / 1e6) × usdPer1MCacheWrite
++ (outputTokens / 1e6) × usdPer1MOutput
 
-Credit rates come from versioned `credit_estimation` rows.
+AI_credits = costUSD / 0.01   // 1 AI credit = $0.01
+```
+
+Rates live in versioned `credit_estimation` rows (USD per 1M tokens).
+
+Credits are computed **only** when the event is GitHub Copilot (`tokenSource=copilot-debug` or provider matches Copilot/GitHub). **Cursor events always get `estimatedCredits = 0`.**
+
+Unknown Copilot models → credits = 0 (no legacy 1/3 fallback).
 
 ## Consequences
 
-- **Positive:** Consistent credits; swappable formulas; spoofing of token counts is harder.
-- **Negative:** Character length remains extension-trusted; extra CPU on ingest (acceptable at 100k/day).
+- **Positive:** Tokens stay comparable across Cursor/Copilot; Credits align with Copilot plan limits.
+- **Negative:** Cached tokens often unavailable → under-estimate slightly vs GitHub invoice; must refresh seed when GitHub updates prices.

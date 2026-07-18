@@ -2,7 +2,7 @@
   "name": "copilot-usage-tracker",
   "displayName": "Copilot Usage Tracker",
   "description": "Privacy-first Copilot Chat metadata tracker — never uploads prompt content or source code.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "ghc",
   "license": "MIT",
   "repository": {

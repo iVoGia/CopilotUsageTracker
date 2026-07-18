@@ -101,8 +101,11 @@ erDiagram
     string provider
     string model
     int version
-    float input_credits_per_1k
-    float output_credits_per_1k
+    float usd_per_1m_input
+    float usd_per_1m_cached_input
+    float usd_per_1m_cache_write
+    float usd_per_1m_output
+    int long_context_threshold
     boolean active
   }
 

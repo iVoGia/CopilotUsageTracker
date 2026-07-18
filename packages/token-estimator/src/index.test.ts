@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ClaudeTokenEstimator } from './claude-estimator';
-import { CompositeTokenEstimator } from './index';
+import {
+  CompositeTokenEstimator,
+  estimateCopilotAiCredits,
+  isGitHubCopilotEvent,
+} from './index';
 import { GeminiTokenEstimator } from './gemini-estimator';
 import { GptTokenEstimator } from './gpt-estimator';
 
@@ -60,5 +64,47 @@ describe('CompositeTokenEstimator', () => {
     });
     expect(claude).toBe(100);
     expect(gemini).toBe(100);
+  });
+});
+
+describe('estimateCopilotAiCredits', () => {
+  const rates = [
+    {
+      model: 'claude-sonnet-4.5',
+      usdPer1MInput: 3,
+      usdPer1MCachedInput: 0.3,
+      usdPer1MCacheWrite: 3.75,
+      usdPer1MOutput: 15,
+    },
+  ];
+
+  it('uses official USD/1M → AI credit ($0.01) formula', () => {
+    // (1000/1e6)*3 + (500/1e6)*15 = 0.003 + 0.0075 = 0.0105 USD → 1.05 credits
+    const credits = estimateCopilotAiCredits({
+      model: 'claude-sonnet-4.5',
+      inputTokens: 1000,
+      outputTokens: 500,
+      rates,
+    });
+    expect(credits).toBeCloseTo(1.05, 6);
+  });
+
+  it('returns 0 when model is unknown', () => {
+    expect(
+      estimateCopilotAiCredits({
+        model: 'unknown-model',
+        inputTokens: 1000,
+        outputTokens: 100,
+        rates,
+      }),
+    ).toBe(0);
+  });
+});
+
+describe('isGitHubCopilotEvent', () => {
+  it('detects copilot sources', () => {
+    expect(isGitHubCopilotEvent('GitHub Copilot', 'copilot-debug')).toBe(true);
+    expect(isGitHubCopilotEvent('Cursor', 'cursor-local')).toBe(false);
+    expect(isGitHubCopilotEvent('Cursor', undefined)).toBe(false);
   });
 });

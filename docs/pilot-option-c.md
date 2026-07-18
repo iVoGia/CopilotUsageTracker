@@ -99,8 +99,9 @@ Dùng **Command Palette** (`Cmd+Shift+P`), không phải Agent Actions palette c
    - **Input tokens** (context window từ Cursor DB local)
    - **Output tokens** (ước lượng từ độ dài response)
    - Status bar: `GHC: ABC-123 · ↑12.4k ↓800`
-4. Dashboard → **Tasks** / Overview: events gắn task.
-5. Đổi ticket: **End Task** → **Start Task** mới.
+4. Dashboard → **Tasks** / Overview: events gắn task; **Input/Output tokens** là metric chính.
+5. **Copilot AI Credits** chỉ tăng khi dùng GitHub Copilot (không phải Cursor) — UI ghi chú rõ.
+6. Đổi ticket: **End Task** → **Start Task** mới.
 
 **Không cần** bấm Record Chat Turn trừ khi auto capture tắt hoặc lỗi.
 
@@ -116,6 +117,7 @@ Nếu auto capture không chạy: **Copilot Tracker: Record Chat Turn** (nhập 
 - Extension **đọc text local** để đo độ dài; **không upload** nội dung prompt/response lên server.
 - Output tokens trên Cursor là **ước lượng** (field `tokenCount` thường = 0).
 - Copilot auto cần extension Copilot Chat + debug export command (VS Code).
+- **Copilot AI Credits** dùng công thức GitHub (USD/1M → credit $0.01); Cursor chỉ hiện tokens (credits = 0).
 
 ---
 

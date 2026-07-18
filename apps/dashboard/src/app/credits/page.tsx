@@ -22,14 +22,21 @@ export default function CreditsPage() {
       .catch(() => setData(null));
   }, [api, queryString, eventCount]);
 
-  if (!data) return <p className="text-sm text-slate-500">Loading credits…</p>;
+  if (!data) return <p className="text-sm text-slate-500">Loading Copilot AI Credits…</p>;
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl">Credits</h1>
+      <div>
+        <h1 className="font-display text-2xl">GitHub Copilot AI Credits</h1>
+        <p className="mt-2 max-w-2xl text-sm text-slate-600">
+          GitHub Copilot only · 1 AI credit = $0.01 · calculated from official per-token USD rates
+          (input / cached / output). Cursor Chat usage is tracked as <strong>tokens</strong> only
+          (credits = 0). Use this page to watch Copilot credit limits.
+        </p>
+      </div>
       <p className="font-display text-3xl">{data.totalCredits.toFixed(2)}</p>
       <div className="rounded-lg border border-slate-200 bg-white/80 p-4">
-        <h2 className="mb-3 text-sm font-semibold">Credits trend</h2>
+        <h2 className="mb-3 text-sm font-semibold">Copilot AI Credits trend</h2>
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={data.creditsTrend}>
             <CartesianGrid strokeDasharray="3 3" />

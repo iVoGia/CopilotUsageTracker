@@ -108,16 +108,12 @@ cursor --install-extension ~/Downloads/copilot-usage-tracker-1.0.1.vsix --force
 
 Không cần chạy lại `operator:setup` — chỉ thay extension.
 
-### Upgrade lên v1.1.0 (auto token capture)
+### Upgrade lên v1.2.0 (Copilot AI Credits)
 
-1. Tải **`copilot-usage-tracker-1.1.0.vsix`** từ [Releases](https://github.com/iVoGia/CopilotUsageTracker/releases/tag/v1.1.0)
-2. Cài đè + **Developer: Reload Window**
-3. Setup → **Start Task** → chat bình thường trong Cursor
-4. Status bar hiện `↑… ↓…` sau lượt chat đầu tiên
-
-**Privacy:** extension đọc Cursor DB local để lấy token/model; chỉ gửi số lên API, không gửi nội dung chat.
-
-**Yêu cầu:** `sqlite3` CLI có trên PATH (macOS/Linux thường có sẵn).
+1. Pull repo + restart API từ **repo gốc** (`ghc_token`), không dùng bản copy lồng nhau.
+2. `npx prisma migrate deploy` + `npx prisma db seed` (trong `apps/api`) — bảng giá Copilot USD/1M.
+3. Cài VSIX **1.2.0** + Reload Window.
+4. Overview: **Tokens** = metric chính; **Copilot AI Credits** chỉ cho GitHub Copilot (Cursor = 0).
 
 ---
 

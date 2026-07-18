@@ -38,7 +38,10 @@ curl -sf http://localhost:3001/api/health
 1. Set new `JWT_SECRET` on `api` and `worker`.
 2. Restart services — clients must re-login (refresh tokens remain valid until expiry/revoke).
 
-### Seed / update credit rates
+### Seed / update Copilot AI credit rates
+
+Rates are **USD per 1M tokens** from [GitHub Copilot models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing).  
+`AI credits = costUSD / 0.01`. Cursor events do not consume these credits.
 
 ```bash
 cd apps/api && npx prisma db seed
